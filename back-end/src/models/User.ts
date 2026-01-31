@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import { UserDocument } from "../type/userModelType";
+import bcrypt from 'bcryptjs'
 
-const userSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema<UserDocument>(
     {
       fullName: {
         type: String,
@@ -50,23 +51,21 @@ const userSchema = new mongoose.Schema(
     },
     { timestamps: true }
   );
-
-  userSchema.pre("save", async function (next){
-    if(!this.isModified("password")) return next()
+  
+  /* 🔹 Password Hash Middleware */
+  userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+  
     try {
-        const salt = await bcrypt.genSalt(10)
-        this.password = await bcrypt.hash(this.password,salt)
-        next()
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-          next(error);
-        } else {
-          next(new Error("Unknown error occurred"));
-        }
-      }
-      
-  })
-
-  const User = mongoose.model("User",userSchema)
-
-  export default User
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+      next();
+    } catch (error) {
+      next(error as Error);
+    }
+  });
+  
+  /* 🔹 Model */
+  const User = mongoose.model<UserDocument>("User", userSchema);
+  
+  export default User;
